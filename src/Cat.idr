@@ -13,6 +13,7 @@ record Cat where
     assoc : (a,b,c,d : ob) -> (f: hom c d) -> (g: hom b c) -> (h: hom a b) -> 
             compose a b d (compose b c d f g) h = compose a c d f (compose a b c g h)
 
+
 Set : Cat 
 Set = MkCat Type (\a, b => (a -> b)) (\_ => id) (\_, _, _, f,g => f . g) (\_, _, _ => Refl) (\_, _, _ => Refl) (\_, _, _, _, _, _, _ => Refl)
 
@@ -23,7 +24,6 @@ UnitCat = MkCat () (\_,_ => ()) (\_ => ()) (\_,_,_,_,_ => ()) lu ru ass where
     ass _ _ _ _ f g h = Refl
 
 infixr 7 ..
-
 (..) : {cat : Cat} -> {a, b, c : ob cat} -> hom cat b c -> hom cat a b -> hom cat a c
 (..) {cat} {a} {b} {c} f g = compose cat a b c f g    
 
