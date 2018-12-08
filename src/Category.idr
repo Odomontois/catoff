@@ -78,9 +78,19 @@ Category a => Funct a a (IdF a) where
 
 data ComposeF f g = ComposeF' f g
 
-(abg: Funct a b g', bcf: Funct b c f') => Funct a c (ComposeF f' g') where
-    fob (ComposeF' f g) = fob f . fob g 
-    fmap : (x, y : a) -> (cfg: ComposeF f' g') -> hom x y -> hom (fob @{bcf} f $ fob @{abg} g x) (fob @{bcf} f $ fob @{abg} g y)
-    fmap x y (ComposeF' f g ) = fmap @{bcf} (fob @{abg} g x) (fob @{abg} g y) f . fmap @{abg} g x y
-    functor_identity = ?compose_identity
-    functor_compose = ?compose_compose
+interface (Funct a b g', Funct b c f') => FunctComp a b c g' f' where
+    fob_comp: f' -> g' -> a -> c
+    fmap_comp: (x, y: a) -> (f: f') -> (g: g') -> hom x y -> hom (fob_comp f g x) (fob_comp f g y)
+    functor_identity_comp : (x : a) -> (f : f') -> (g: g') -> fmap_comp x x f g (ident x) = ident (fob_comp f g x)
+    functor_compose_comp :  (x,y,z: a) ->  (f : f') -> (g : g') -> (s: hom y z)->(t: hom x y)-> (
+        fmap_comp x z f g (compose x y z s t)) = compose (fob_comp f g x) (fob_comp f g y) (fob_comp f g z) (fmap_comp y z f g s) (fmap_comp x y f g t)
+
+(abg: Funct a b g', bcf: Funct b c f') => FunctComp a b c g' f' where
+    fob_comp f g = fob @{bcf} f . fob @{abg} g
+    fmap_comp x y f g = fmap (fob g x) (fob g y) f . fmap x y g
+
+-- (abg: Funct a b g', bcf: Funct b c f') => Funct a c (ComposeF f' g') where
+--     fob (ComposeF' f g) = ?compose_fob
+--     fmap x y _ = ?compose_fmap
+--     functor_identity = ?compose_identity
+--     functor_compose = ?compose_compose
