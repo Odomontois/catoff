@@ -45,23 +45,16 @@ Category () where
     category_l_unit a b () = Refl
     category_r_unit a b () = Refl
     category_assoc a b c d () () () = Refl
+
+pair_ident: a = b -> x = y -> (a,x) = (b,y)
+pair_ident Refl Refl = Refl
     
 (Category a, Category b) => Category (a, b) where
     hom (x, u) (y, v) = (hom x y, hom u v)
     ident (x, u) = (ident x, ident u)
     compose (x, u) (y, v) (z, w) (f, k) (g, l) = (compose x y z f g, compose u v w k l)
-    category_l_unit (x, u) (y, v) (f, k) = res where
-        la: hom x y
-        la = compose x y y (ident y) f
-        lb: hom u v
-        lb = compose u v v (ident v) k
-        ea : la = f
-        ea = category_l_unit x y f
-        eb : lb = k
-        eb = category_l_unit u v k
-        res: (la, lb) = (f, k)
-        res = case ea of Refl => ?res --case eb of Refl => Refl
-
+    category_l_unit (x, u) (y, v) (f, k) = 
+       pair_ident (category_l_unit x y f) (category_l_unit u v k)
     
 
 interface (Category a, Category b) => Functor a b (f: a -> b) where
