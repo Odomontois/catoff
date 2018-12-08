@@ -55,7 +55,10 @@ pair_ident Refl Refl = Refl
     compose (x, u) (y, v) (z, w) (f, k) (g, l) = (compose x y z f g, compose u v w k l)
     category_l_unit (x, u) (y, v) (f, k) = 
        pair_ident (category_l_unit x y f) (category_l_unit u v k)
-    
+    category_r_unit (x, u) (y, v) (f, k) = 
+       pair_ident (category_r_unit x y f) (category_r_unit u v k)    
+    category_assoc (a1, a2) (b1, b2) (c1, c2) (d1, d2) (f1, f2) (g1, g2) (h1, h2) = 
+       pair_ident (category_assoc a1 b1 c1 d1 f1 g1 h1) (category_assoc a2 b2 c2 d2 f2 g2 h2) 
 
 interface (Category a, Category b) => Functor a b (f: a -> b) where
     fmap: {x, y: a} -> hom x y -> hom (f x) (f y)  
