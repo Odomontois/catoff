@@ -62,24 +62,25 @@ pair_ident Refl Refl = Refl
 
 interface (Category a, Category b) => Funct a b F where
     fob: F -> a -> b 
-    fmap: {x, y: a} -> (f : F) -> hom x y -> hom (fob f x) (fob f y)  
-    functor_identity : {x : a} -> (f : F) -> fmap f (ident x) = ident (fob f x)
-    functor_compose :  {x,y,z: a} ->  (f : F) -> (s: hom y z)->(t: hom x y)-> (
-        fmap f (compose x y z s t)) = compose (fob f x) (fob f y) (fob f z) (fmap f s) (fmap f t)
+    fmap: (x, y: a) -> (f : F) -> hom x y -> hom (fob f x) (fob f y)  
+    functor_identity : (x : a) -> (f : F) -> fmap x x f (ident x) = ident (fob f x)
+    functor_compose :  (x,y,z: a) ->  (f : F) -> (s: hom y z)->(t: hom x y)-> (
+        fmap x z f (compose x y z s t)) = compose (fob f x) (fob f y) (fob f z) (fmap y z f s) (fmap x y f t)
 
 data IdF a = IdF'
 
 Category a => Funct a a (IdF a) where
     fob _ = id
-    fmap _ = id
-    functor_identity _ = Refl
-    functor_compose _ f g = Refl
+    fmap _ _  _ = id
+    functor_identity _ _ = Refl
+    functor_compose _ _ _ _ f g = Refl
 
 
 data ComposeF f g = ComposeF' f g
 
-(Funct b c f', Funct a b g') => Funct a c (ComposeF f' g') where
+(abg: Funct a b g', bcf: Funct b c f') => Funct a c (ComposeF f' g') where
     fob (ComposeF' f g) = fob f . fob g 
-    fmap (ComposeF' f g )= fmap f . fmap g
+    fmap : (x, y : a) -> (cfg: ComposeF f' g') -> hom x y -> hom (fob @{bcf} f $ fob @{abg} g x) (fob @{bcf} f $ fob @{abg} g y)
+    fmap x y (ComposeF' f g ) = fmap @{bcf} (fob @{abg} g x) (fob @{abg} g y) f . fmap @{abg} g x y
     functor_identity = ?compose_identity
     functor_compose = ?compose_compose
