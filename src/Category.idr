@@ -60,37 +60,38 @@ pair_ident Refl Refl = Refl
     category_assoc (a1, a2) (b1, b2) (c1, c2) (d1, d2) (f1, f2) (g1, g2) (h1, h2) = 
        pair_ident (category_assoc a1 b1 c1 d1 f1 g1 h1) (category_assoc a2 b2 c2 d2 f2 g2 h2) 
 
-interface (Category a, Category b) => Funct a b F where
-    fob: F -> a -> b 
-    fmap: (x, y: a) -> (f : F) -> hom x y -> hom (fob f x) (fob f y)  
-    functor_identity : (x : a) -> (f : F) -> fmap x x f (ident x) = ident (fob f x)
-    functor_compose :  (x,y,z: a) ->  (f : F) -> (s: hom y z)->(t: hom x y)-> (
-        fmap x z f (compose x y z s t)) = compose (fob f x) (fob f y) (fob f z) (fmap y z f s) (fmap x y f t)
+data Funct : Type -> Type -> Type where
+    MkFunct :
+    (Category a, Category b) =>
+    (fob: a -> b) ->
+    (fmap: (x, y: a) -> hom x y -> hom (fob x) (fob y)  ) ->
+    (functor_identity : (x : a) -> fmap x x (ident x) = ident (fob x)) -> 
+    (functor_compose :  (x,y,z: a) -> (s: hom y z)->(t: hom x y)-> (
+        fmap x z (compose x y z s t)) = compose (fob x) (fob y) (fob z) (fmap y z s) (fmap x y t)) -> 
+    Funct a b
 
-data IdF a = IdF'
+IdF : (Category a) => Funct a a 
+IdF = MkFunct fob fmap fid fcomp where
+        fob: a -> a
+        fob = id
+        fmap : (x, y: a) -> hom x y -> hom x y
+        fmap x y = the (hom x y -> hom x y) id
+        fid : (x : a) -> fmap x x (ident x ) = ident (fob x)
+        fid _ = Refl
+        fcomp : (x,y,z: a) -> (s: hom y z) -> (t: hom x y) -> compose x y z s t = compose x y z s t
+        fcomp _ _ _ _ _ = Refl
 
-Category a => Funct a a (IdF a) where
-    fob _ = id
-    fmap _ _  _ = id
-    functor_identity _ _ = Refl
-    functor_compose _ _ _ _ f g = Refl
+infixl 4 &>
+(&>): a = b -> b = c -> a = c
+Refl &> Refl = Refl 
 
-
-data ComposeF f g = ComposeF' f g
-
-interface (Funct a b g', Funct b c f') => FunctComp a b c g' f' where
-    fob_comp: f' -> g' -> a -> c
-    fmap_comp: (x, y: a) -> (f: f') -> (g: g') -> hom x y -> hom (fob_comp f g x) (fob_comp f g y)
-    functor_identity_comp : (x : a) -> (f : f') -> (g: g') -> fmap_comp x x f g (ident x) = ident (fob_comp f g x)
-    functor_compose_comp :  (x,y,z: a) ->  (f : f') -> (g : g') -> (s: hom y z)->(t: hom x y)-> (
-        fmap_comp x z f g (compose x y z s t)) = compose (fob_comp f g x) (fob_comp f g y) (fob_comp f g z) (fmap_comp y z f g s) (fmap_comp x y f g t)
-
-(abg: Funct a b g', bcf: Funct b c f') => FunctComp a b c g' f' where
-    fob_comp f g = fob @{bcf} f . fob @{abg} g
-    fmap_comp x y f g = fmap (fob g x) (fob g y) f . fmap x y g
-
--- (abg: Funct a b g', bcf: Funct b c f') => Funct a c (ComposeF f' g') where
---     fob (ComposeF' f g) = ?compose_fob
---     fmap x y _ = ?compose_fmap
---     functor_identity = ?compose_identity
---     functor_compose = ?compose_compose
+ComposeF : Funct b c -> Funct a b -> Funct a c
+ComposeF (MkFunct fob fmap fid fcomp) (MkFunct gob gmap gid gcomp) = MkFunct rob rmap rid rcomp where
+    rob: a -> c
+    rob = fob . gob
+    rmap: (x, y: a) -> hom x y -> hom (rob x) (rob y)
+    rmap x y = fmap (gob x) (gob y) . gmap x y
+    rid: (x: a) -> fmap (gob x) (gob x) (gmap x x (ident x)) = ident (rob x)
+    rid x = cong (gid x)  &> fid (gob x)
+    rcomp : (x,y,z: a)->(s: hom y z)->(t: hom x y)->rmap x z((..) {ob=a} s t) =  (..) {ob=c} (rmap y z s) (rmap x y t)
+    rcomp x y z s t = cong (gcomp x y z s t) &> fcomp (gob x) (gob y) (gob z) (gmap y z s) (gmap x y t) 
