@@ -70,16 +70,22 @@ data Funct : Type -> Type -> Type where
         fmap x z (compose x y z s t)) = compose (fob x) (fob y) (fob z) (fmap y z s) (fmap x y t)) -> 
     Funct a b
 
-IdF : (Category a) => Funct a a 
+fob: Funct a b -> a -> b
+fob (Funct ob _ _ _) = ob
+
+-- fmap: (f: Funct a b) -> (x, y: a) -> hom x y -> hom (fob f x) (fob f y)
+-- fmap 
+
+IdF : (ca: Category a) => Funct a a 
 IdF = MkFunct fob fmap fid fcomp where
-        fob: a -> a
-        fob = id
-        fmap : (x, y: a) -> hom x y -> hom x y
-        fmap x y = the (hom x y -> hom x y) id
-        fid : (x : a) -> fmap x x (ident x ) = ident (fob x)
-        fid _ = Refl
-        fcomp : (x,y,z: a) -> (s: hom y z) -> (t: hom x y) -> compose x y z s t = compose x y z s t
-        fcomp _ _ _ _ _ = Refl
+    fob: a -> a
+    fob = id
+    fmap : (x, y: a) -> hom x y -> hom x y
+    fmap x y = the (hom x y -> hom x y) id
+    fid : (x : a) -> fmap x x (ident x ) = ident (fob x)
+    fid _ = Refl
+    fcomp : (x,y,z: a) -> (s: hom y z) -> (t: hom x y) -> compose x y z s t = compose x y z s t
+    fcomp _ _ _ _ _ = Refl
 
 infixl 4 &>
 (&>): a = b -> b = c -> a = c
@@ -95,3 +101,19 @@ ComposeF (MkFunct fob fmap fid fcomp) (MkFunct gob gmap gid gcomp) = MkFunct rob
     rid x = cong (gid x)  &> fid (gob x)
     rcomp : (x,y,z: a)->(s: hom y z)->(t: hom x y)->rmap x z((..) {ob=a} s t) =  (..) {ob=c} (rmap y z s) (rmap x y t)
     rcomp x y z s t = cong (gcomp x y z s t) &> fcomp (gob x) (gob y) (gob z) (gmap y z s) (gmap x y t) 
+
+
+getCat : {auto c: Category a} -> Category a
+getCat {c} = c
+
+fdom: Funct a b -> Category a
+fdom (MkFunct _ _ _ _ ) = getCat {a}
+
+fcod: Funct a b -> Category b
+fcod (MkFunct _ _ _ _ ) = getCat {a=b}
+
+functor_eq: (x: Funct a b) -> (y: Funct a b) -> {auto obeq: fob x = fob y} -> {auto mapeq: fmap x = fmap y} -> x = y
+-- functor_eq 
+
+-- functor_left_unit: (f: Funct a b) -> ComposeF (IdF @{fcod f}) f = f
+-- functor_left_unit (MkFunct fob fmap fid fcomp) = Refl
