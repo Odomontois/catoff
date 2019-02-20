@@ -44,7 +44,29 @@ record Funct a b (cod: Cat a) (dom: Cat b) where
     functor_id : (x : a) -> map (ident cod x) = ident dom (mob x)
     functor_comp : (x,y,z: a) -> (f: hom cod y z) -> (g:hom cod x y) -> map (ccmp cod f g) = ccmp dom (map f) (map g)
 
-IdF: (ca: Cat a) -> Funct a a ca ca
+Functr:{a, b: Type}->(cod: Cat a)->(dom: Cat b)->Type
+Functr {a} {b} cod dom = Funct a b cod dom
+
+record FunctEq a b
+               (cod: Cat a) (dom: Cat b)
+                (f: Functr cod dom)
+                (g: Functr cod dom)  where
+    constructor FunctRefl
+    obEq: (x: a) -> mob f x = mob g x
+    mapEq: {x, y: a} -> (t: hom cod x y) -> map f t = map g t 
+
+infix 4 =##=
+(=##=): {a, b: Type}->{cod: Cat a}->{dom: Cat b}->(f: Functr cod dom)->(g: Functr cod dom)->Type
+(=##=) {a} {b} {cod} {dom} f g = FunctEq a b cod dom f g 
+
+functTrans: f =##= g -> g =##= h -> f =##= h
+functTrans fgeq gheq = FunctRefl (\x => trans (obEq fgeq x) (obEq gheq x) ) (\t => trans (mapEq fgeq t) (mapEq gheq t) )
+
+functSym: f =##= g -> g =##= f
+functSym fgeq = FunctRefl (\x => sym $ obEq fgeq x) (\t => sym $ mapEq fgeq t)
+    
+
+IdF: (ca: Cat a) -> Functr ca ca
 IdF ca = MkFunct id map' id' comp' where
     map': {x,y: a} -> (hom ca x y) -> (hom ca x y)
     map' x = x
@@ -53,7 +75,7 @@ IdF ca = MkFunct id map' id' comp' where
     comp': (x,y,z: a) -> (f: hom ca y z) -> (g:hom ca x y) -> ccmp ca f g = ccmp ca f g
     comp' x y z f g = Refl
 
-ComposeF: (ca: Cat a)->(cb: Cat b)->(cc: Cat c)->Funct b c cb cc->Funct a b ca cb->Funct a c ca cc
+ComposeF: (ca: Cat a)->(cb: Cat b)->(cc: Cat c)->Functr cb cc->Functr ca cb->Functr ca cc
 ComposeF ca cb cc f g = MkFunct ob' map' id' comp' where
     ob': a -> c
     ob' = mob f . mob g
