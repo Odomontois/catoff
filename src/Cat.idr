@@ -39,27 +39,27 @@ infix 6 ~>
 (~>) : {auto cat : Cat o} -> (x, y: o) -> Type
 (~>) {cat} = hom cat
 
-record Funct a b (cod: Cat a) (dom: Cat b) where
+record Funct a b (dom: Cat a) (cod: Cat b) where
     constructor MkFunct
     mob : a -> b
-    map : {x,y : a} -> hom cod x y -> hom dom (mob x) (mob y)
-    functor_id : (x : a) -> map (ident cod x) = ident dom (mob x)
-    functor_comp : (x,y,z: a) -> (f: hom cod y z) -> (g:hom cod x y) -> map (ccmp cod f g) = ccmp dom (map f) (map g)
+    map : {x,y : a} -> hom dom x y -> hom cod (mob x) (mob y)
+    functor_id : (x : a) -> map (ident dom x) = ident cod (mob x)
+    functor_comp : (x,y,z: a) -> (f: hom dom y z) -> (g:hom dom x y) -> map (ccmp dom f g) = ccmp cod (map f) (map g)
 
-Functr:{a, b: Type}->(cod: Cat a)->(dom: Cat b)->Type
-Functr {a} {b} cod dom = Funct a b cod dom
+Functr:{a, b: Type}->(dom: Cat a)->(cod: Cat b)->Type
+Functr {a} {b} dom cod = Funct a b dom cod
 
 record FunctEq a b
-               (cod: Cat a) (dom: Cat b)
-                (f: Functr cod dom)
-                (g: Functr cod dom)  where
+               (dom: Cat a) (cod: Cat b)
+                (f: Functr dom cod)
+                (g: Functr dom cod)  where
     constructor FunctRefl
     obEq: (x: a) -> mob f x = mob g x
-    mapEq: {x, y: a} -> (t: hom cod x y) -> map f t = map g t 
+    mapEq: {x, y: a} -> (t: hom dom x y) -> map f t = map g t 
 
 infix 4 =##=
-(=##=): {a, b: Type}->{cod: Cat a}->{dom: Cat b}->(f: Functr cod dom)->(g: Functr cod dom)->Type
-(=##=) {a} {b} {cod} {dom} f g = FunctEq a b cod dom f g 
+(=##=): {a, b: Type}->{dom: Cat a}->{cod: Cat b}->(f: Functr dom cod)->(g: Functr dom cod)->Type
+(=##=) {a} {b} {dom} {cod} f g = FunctEq a b dom cod f g 
 
 functTrans: f =##= g -> g =##= h -> f =##= h
 functTrans fgeq gheq = FunctRefl (\x => trans (obEq fgeq x) (obEq gheq x) ) (\t => trans (mapEq fgeq t) (mapEq gheq t) )
@@ -68,7 +68,7 @@ functSym: f =##= g -> g =##= f
 functSym fgeq = FunctRefl (\x => sym $ obEq fgeq x) (\t => sym $ mapEq fgeq t)
 
 
-IsEquivalence (FunctEq a b cod dom) where
+IsEquivalence (FunctEq a b dom cod) where
    reflectivity = FunctRefl (\u => Refl) (\t => Refl)
    symmetry = functSym
    transitivity = functTrans
