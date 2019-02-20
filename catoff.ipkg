@@ -1,0 +1,6 @@
+package catoff
+
+modules =  Cat
+           , Equivalences
+
+sourcedir = src

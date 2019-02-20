@@ -1,4 +1,6 @@
 module Cat 
+import Equivalences
+
 %default total
 
 infixl 4 &>
@@ -64,6 +66,12 @@ functTrans fgeq gheq = FunctRefl (\x => trans (obEq fgeq x) (obEq gheq x) ) (\t 
 
 functSym: f =##= g -> g =##= f
 functSym fgeq = FunctRefl (\x => sym $ obEq fgeq x) (\t => sym $ mapEq fgeq t)
+
+
+IsEquivalence (FunctEq a b cod dom) where
+   reflectivity = FunctRefl (\u => Refl) (\t => Refl)
+   symmetry = functSym
+   transitivity = functTrans
     
 
 IdF: {ca: Cat a} -> Functr ca ca
