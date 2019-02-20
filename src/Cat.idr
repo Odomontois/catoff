@@ -66,8 +66,8 @@ functSym: f =##= g -> g =##= f
 functSym fgeq = FunctRefl (\x => sym $ obEq fgeq x) (\t => sym $ mapEq fgeq t)
     
 
-IdF: (ca: Cat a) -> Functr ca ca
-IdF ca = MkFunct id map' id' comp' where
+IdF: {ca: Cat a} -> Functr ca ca
+IdF {ca} = MkFunct id map' id' comp' where
     map': {x,y: a} -> (hom ca x y) -> (hom ca x y)
     map' x = x
     id': (x : a) -> ident ca x = ident ca x
@@ -75,8 +75,8 @@ IdF ca = MkFunct id map' id' comp' where
     comp': (x,y,z: a) -> (f: hom ca y z) -> (g:hom ca x y) -> ccmp ca f g = ccmp ca f g
     comp' x y z f g = Refl
 
-ComposeF: (ca: Cat a)->(cb: Cat b)->(cc: Cat c)->Functr cb cc->Functr ca cb->Functr ca cc
-ComposeF ca cb cc f g = MkFunct ob' map' id' comp' where
+ComposeF: {ca: Cat a}->{cb: Cat b}->{cc: Cat c}->Functr cb cc->Functr ca cb->Functr ca cc
+ComposeF {ca} {cb} {cc} f g = MkFunct ob' map' id' comp' where
     ob': a -> c
     ob' = mob f . mob g
     map': {x,y: a} -> hom ca x y -> hom cc (ob' x) (ob' y)
@@ -86,3 +86,11 @@ ComposeF ca cb cc f g = MkFunct ob' map' id' comp' where
     comp': (x,y,z: a) -> (f: hom ca y z) -> (g: hom ca x y)-> map' (ccmp ca f g) = ccmp cc (map' f) (map' g)  
     comp' x y z u v = cong (functor_comp g x y z u v) &> functor_comp f (mob g x) (mob g y) (mob g z) (map g u) (map g v) 
 
+functorLeftUnit: ComposeF IdF f =##= f
+functorLeftUnit = FunctRefl (\_ => Refl) (\_ => Refl)
+
+functorRightUnit: ComposeF f IdF =##= f
+functorRightUnit = FunctRefl (\_ => Refl) (\_ => Refl)
+
+functorAssocitativity: ComposeF (ComposeF f g) h =##= ComposeF f (ComposeF g h)
+functorAssocitativity = FunctRefl (\_ => Refl) (\_ => Refl)
