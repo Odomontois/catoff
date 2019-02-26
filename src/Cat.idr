@@ -13,22 +13,28 @@ record CatBase (ob: Type) where
     ident : (a : ob) -> hom a a
     compose : (a ,b, c : ob) -> hom b c -> hom a b -> hom a c
 
+record CatHomEq (ob: Type) (base: CatBase ob) where
+    constructor MkCatHomEq
+    homEqv: (x, y: ob) -> Setoid (hom base x y)
 
-record CatIdent (ob: Type) where
-    constructor MkCatBaseIdent
-    base: CatBase ob
-    eqv: (a: ob) -> (b: ob) -> SomeEqv (hom base a b)
+chomeq :  {ob: Type} -> {base: CatBase ob} -> {a, b: ob} -> CatHomEq ob base -> hom base a b -> hom base a b -> Type
+chomeq  {base} {a} {b} he = seteq (homEqv he a b)
 
-record CatLaws (o: Type) (ci: CatIdent o) where
+record CatLaws (ob: Type) (base: CatBase ob) (ceq: CatHomEq ob base) where
     constructor MkCatLaws
-    l_unit : (a, b : o) -> hom (base ci) a b 
-    -- -> identity i (compose a b b (ident b) f) f 
-    -- r_unit : (a, b : o) -> (f : hom a b) -> identity i (compose a a b f (ident a)) f
-    -- assoc : (a,b,c,d : o) -> (f: hom c d) -> (g: hom b c) -> (h: hom a b) -> 
-    --         compose a b d (compose b c d f g) h = compose a c d f (compose a b c g h)
+    cat_l_unit : (a, b : ob) -> (f: hom base a b) -> chomeq ceq (compose base a b b (ident base b) f) f 
+    cat_r_unit : (a, b : ob) -> (f : hom base a b) -> chomeq ceq (compose base a a b f (ident base a)) f
+    cat_assoc : (a,b,c,d : ob) -> (f: hom base c d) -> (g: hom base b c) -> (h: hom base a b) -> 
+            chomeq ceq (compose base a b d (compose base b c d f g) h) (compose base a c d f (compose base a b c g h))
 
+record Cat (ob: Type) where
+    constructor MkCat
+    catBase: CatBase ob
+    catHomEq: CatHomEq ob catBase
+    catLaws: CatLaws ob catBase catHomEq 
 
-
+main : IO ()
+main = putStrLn "hello"
 -- record Cat ob where
 --     constructor MkCat
     
